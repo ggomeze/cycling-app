@@ -23,21 +23,15 @@ class MapScreen extends StatelessWidget {
 
     if (routePoints.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Mapa'),
-        ),
-        body: const Center(
-          child: Text('No se pudo cargar la ruta.'),
-        ),
+        appBar: AppBar(title: const Text('Mapa')),
+        body: const Center(child: Text('No se pudo cargar la ruta.')),
       );
     }
 
     final bounds = LatLngBounds.fromPoints(routePoints);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mapa'),
-      ),
+      appBar: AppBar(title: const Text('Mapa')),
       body: FlutterMap(
         options: MapOptions(
           initialCameraFit: CameraFit.bounds(
@@ -52,11 +46,7 @@ class MapScreen extends StatelessWidget {
           ),
           PolylineLayer(
             polylines: [
-              Polyline(
-                points: routePoints,
-                strokeWidth: 4,
-                color: Colors.blue,
-              ),
+              Polyline(points: routePoints, strokeWidth: 4, color: Colors.blue),
             ],
           ),
         ],

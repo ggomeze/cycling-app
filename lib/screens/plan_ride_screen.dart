@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/ride_route.dart';
 import '../services/api_service.dart';
 import '../utils/formatters.dart';
+import '../widgets/route_map_view.dart';
+import '../widgets/score_badge.dart';
 import 'route_detail_screen.dart';
 
 class PlanRideScreen extends StatefulWidget {
@@ -20,34 +22,27 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
   List<RideRoute> _routes = [];
 
   Future<void> _planRoutes() async {
-    setState(() {
-      _loading = true;
-    });
+    setState(() => _loading = true);
 
     try {
       final routes = await _apiService.plan(_controller.text);
       if (!mounted) {
         return;
       }
-      setState(() {
-        _routes = routes;
-      });
+      setState(() => _routes = routes);
     } catch (e, st) {
       debugPrint('PLAN ERROR: $e');
       debugPrint('$st');
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        setState(() => _loading = false);
       }
-      setState(() {
-        _loading = false;
-      });
     }
   }
 
@@ -61,18 +56,16 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cycling Agent'),
-      ),
+      appBar: AppBar(title: const Text('Asistente de Pina')),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1D4ED8), Color(0xFF22C55E)],
+                  colors: [Color(0xFFFF5A1F), Color(0xFFFF7A2A)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -83,11 +76,11 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(
-                      Icons.directions_bike,
+                      Icons.directions_bike_rounded,
                       color: Colors.white,
                       size: 28,
                     ),
@@ -98,7 +91,7 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Cycling Agent',
+                          'Planifica por tiempo real',
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -106,9 +99,9 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Planifica rutas seguras y rapidas',
+                          'Texto libre + meteorología + rutas sugeridas',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.92),
                           ),
                         ),
                       ],
@@ -122,11 +115,6 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Card(
-                elevation: 0,
-                color: theme.colorScheme.surfaceContainerHighest,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -137,6 +125,8 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                         maxLines: 6,
                         decoration: const InputDecoration(
                           labelText: 'Describe tu salida',
+                          hintText:
+                              'Ej: Salida desde Altea a las 15:30 para hacer 2h...',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -144,6 +134,9 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF5A1F),
+                          ),
                           onPressed: _loading ? null : _planRoutes,
                           child: const Text('Generar rutas'),
                         ),
@@ -176,76 +169,69 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final route = _routes[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        title: Text(
-                          '${formatKm(route.distanceKm)} · ${formatDuration(route.durationH)}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final route = _routes[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                RouteDetailScreen(route: route),
                           ),
-                        ),
-                        subtitle: route.reasons.isEmpty
-                            ? const Text('Sin motivos destacados')
-                            : Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: route.reasons
-                                        .map(
-                                          (reason) => Padding(
-                                            padding:
-                                                const EdgeInsets.only(right: 6),
-                                            child: Chip(
-                                              label: Text(
-                                                reason,
-                                                style: theme
-                                                    .textTheme.labelSmall,
-                                              ),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${formatKm(route.distanceKm)} · ${formatDuration(route.durationH)}${route.elevationGainM != null ? ' · +${route.elevationGainM!.toStringAsFixed(0)} m' : ''}',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
                                 ),
+                                ScoreBadge(score: route.score),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            RouteMapView(
+                              geometryPolyline: route.geometryPolyline,
+                              height: 110,
+                              borderRadius: 14,
+                            ),
+                            const SizedBox(height: 10),
+                            if (route.reasons.isEmpty)
+                              Text(
+                                'Sin motivos destacados',
+                                style: theme.textTheme.bodySmall,
+                              )
+                            else
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: route.reasons
+                                    .map(
+                                      (reason) => Chip(
+                                        visualDensity: VisualDensity.compact,
+                                        label: Text(reason),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
-                        trailing: CircleAvatar(
-                          radius: 20,
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          foregroundColor: theme.colorScheme.onPrimaryContainer,
-                          child: Text(
-                            '${route.score}',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                          ],
                         ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  RouteDetailScreen(route: route),
-                            ),
-                          );
-                        },
                       ),
-                    );
-                  },
-                  childCount: _routes.length,
-                ),
+                    ),
+                  );
+                }, childCount: _routes.length),
               ),
             ),
         ],

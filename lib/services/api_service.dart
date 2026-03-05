@@ -16,14 +16,28 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      String message = 'Error del servidor';
+      try {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final error = body['error'];
+        if (error is String && error.trim().isNotEmpty) {
+          message = error;
+        } else {
+          message = 'HTTP ${response.statusCode}';
+        }
+      } catch (_) {
+        message = 'HTTP ${response.statusCode}';
+      }
+      throw Exception(message);
     }
 
     final Map<String, dynamic> data =
         jsonDecode(response.body) as Map<String, dynamic>;
     final List<dynamic> routesJson = data['routes'] as List<dynamic>;
     return routesJson
-        .map((routeJson) => RideRoute.fromJson(routeJson as Map<String, dynamic>))
+        .map(
+          (routeJson) => RideRoute.fromJson(routeJson as Map<String, dynamic>),
+        )
         .toList();
   }
 }
