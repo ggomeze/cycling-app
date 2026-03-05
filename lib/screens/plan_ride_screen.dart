@@ -136,7 +136,7 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                         minLines: 2,
                         maxLines: 6,
                         decoration: const InputDecoration(
-                          labelText: 'Describe tu rodada',
+                          labelText: 'Describe tu salida',
                           border: OutlineInputBorder(),
                         ),
                       ),
